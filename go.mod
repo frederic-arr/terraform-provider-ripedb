@@ -1,4 +1,4 @@
-module terraform-provider-ripe
+module terraform-provider-ripedb
 
 go 1.22.5
 

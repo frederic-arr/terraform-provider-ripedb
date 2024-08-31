@@ -22,7 +22,7 @@ func TestGetFirstFunction_Known(t *testing.T) {
 			{
 				Config: `
 				output "name" {
-					value = provider::ripe::get_first([{ name = "name", value = "TEST ORG" }], "name")
+					value = provider::ripedb::get_first([{ name = "name", value = "TEST ORG" }], "name")
 				}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{

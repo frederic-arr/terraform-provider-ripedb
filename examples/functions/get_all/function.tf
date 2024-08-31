@@ -1,8 +1,8 @@
-data "ripe_object" "test" {
+data "ripedb_object" "test" {
   class = "organisation"
   key   = "ORG-TT1-TEST"
 }
 
 output "name" {
-  value = provider::ripe::get_first(data.ripe_object.test.attributes, "org-name")
+  value = provider::ripedb::get_first(data.ripedb_object.test.attributes, "org-name")
 }

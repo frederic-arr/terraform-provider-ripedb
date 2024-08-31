@@ -22,7 +22,7 @@ func TestGetAllFunction_Known(t *testing.T) {
 			{
 				Config: `
 				output "mnt_by" {
-					value = provider::ripe::get_all([
+					value = provider::ripedb::get_all([
 						{ name = "mnt-by", value = "RIPE-MNT" },
 						{ name = "mnt-by", value = "ARIN-MNT" },
 					], "mnt-by")
