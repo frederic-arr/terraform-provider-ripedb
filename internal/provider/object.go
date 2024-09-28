@@ -4,19 +4,18 @@
 package provider
 
 import (
-	"fmt"
-	"net"
-
+	"github.com/frederic-arr/ripedb-go/ripedb"
 	"github.com/frederic-arr/rpsl-go"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // ObjectDataSourceModel describes the data source data model.
 type ObjectModel struct {
-	Id         types.String           `tfsdk:"id"`
-	Class      types.String           `tfsdk:"class"`
-	Key        types.String           `tfsdk:"key"`
-	Attributes []ObjectModelAttribute `tfsdk:"attributes"`
+	Id            types.String              `tfsdk:"id"`
+	Class         types.String              `tfsdk:"class"`
+	Key           types.String              `tfsdk:"key"`
+	Attributes    map[string][]types.String `tfsdk:"attributes"`
+	RawAttributes []ObjectModelAttribute    `tfsdk:"raw_attributes"`
 }
 
 type ObjectModelAttribute struct {
@@ -25,35 +24,29 @@ type ObjectModelAttribute struct {
 }
 
 func query(kind string, key string) (*rpsl.Object, error) {
-	server := "whois-test.ripe.net:43"
-	query := fmt.Sprintf("-rBGT%s %s\r\n", kind, key)
-
-	conn, err := net.Dial("tcp", server)
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-
-	_, err = conn.Write([]byte(query))
+	client := ripedb.NewRipeAnonymousClient()
+	model, err := client.Get("ripe", kind, key)
 	if err != nil {
 		return nil, err
 	}
 
-	buf := make([]byte, 1024)
-	for {
-		_, err := conn.Read(buf)
-		if err != nil {
-			break
-		}
-	}
-
-	raw := string(buf)
-	obj, err := rpsl.Parse(raw)
+	obj, err := model.FindOne()
 	if err != nil {
 		return nil, err
 	}
 
-	return obj, nil
+	mapped := rpsl.Object{
+		Attributes: []rpsl.Attribute{},
+	}
+
+	for _, attr := range obj.Attributes.Attribute {
+		mapped.Attributes = append(mapped.Attributes, rpsl.Attribute{
+			Name:  attr.Name,
+			Value: attr.Value.(string),
+		})
+	}
+
+	return &mapped, nil
 }
 
 func queryData(kind string, key string, data *ObjectModel) error {
@@ -62,8 +55,14 @@ func queryData(kind string, key string, data *ObjectModel) error {
 		return err
 	}
 
+	data.Attributes = map[string][]types.String{}
 	for _, attr := range obj.Attributes {
-		data.Attributes = append(data.Attributes, ObjectModelAttribute{
+		if data.Attributes[attr.Name] == nil {
+			data.Attributes[attr.Name] = []types.String{}
+		}
+
+		data.Attributes[attr.Name] = append(data.Attributes[attr.Name], types.StringValue(attr.Value))
+		data.RawAttributes = append(data.RawAttributes, ObjectModelAttribute{
 			Name:  types.StringValue(attr.Name),
 			Value: types.StringValue(attr.Value),
 		})

@@ -40,7 +40,14 @@ func (d *ObjectDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 				MarkdownDescription: "the key of the object",
 				Required:            true,
 			},
-			"attributes": schema.ListNestedAttribute{
+			"attributes": schema.MapAttribute{
+				MarkdownDescription: "a map of attributes with their values",
+				Computed:            true,
+				ElementType: types.ListType{
+					ElemType: types.StringType,
+				},
+			},
+			"raw_attributes": schema.ListNestedAttribute{
 				MarkdownDescription: "the attributes of the object",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
