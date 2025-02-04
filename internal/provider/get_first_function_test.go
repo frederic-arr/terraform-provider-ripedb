@@ -32,3 +32,24 @@ func TestGetFirstFunction_Known(t *testing.T) {
 		},
 	})
 }
+
+func TestGetFirstFunction_Unknown(t *testing.T) {
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				output "admin_c" {
+					value = jsonencode(provider::ripedb::get_first([{ name = "name", value = "TEST ORG" }], "admin-c"))
+				}
+				`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("admin_c", knownvalue.StringExact("null")),
+				},
+			},
+		},
+	})
+}

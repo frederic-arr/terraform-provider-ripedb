@@ -4,18 +4,17 @@
 package provider
 
 import (
-	"github.com/frederic-arr/ripedb-go/ripedb"
+	"slices"
+
 	"github.com/frederic-arr/rpsl-go"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// ObjectDataSourceModel describes the data source data model.
 type ObjectModel struct {
-	Id            types.String              `tfsdk:"id"`
-	Class         types.String              `tfsdk:"class"`
-	Key           types.String              `tfsdk:"key"`
-	Attributes    map[string][]types.String `tfsdk:"attributes"`
-	RawAttributes []ObjectModelAttribute    `tfsdk:"raw_attributes"`
+	Id         types.String           `tfsdk:"id"`
+	Class      types.String           `tfsdk:"class"`
+	Value      types.String           `tfsdk:"value"`
+	Attributes []ObjectModelAttribute `tfsdk:"attributes"`
 }
 
 type ObjectModelAttribute struct {
@@ -23,50 +22,63 @@ type ObjectModelAttribute struct {
 	Value types.String `tfsdk:"value"`
 }
 
-func query(kind string, key string) (*rpsl.Object, error) {
-	client := ripedb.NewRipeAnonymousClient()
-	model, err := client.Get("ripe", kind, key)
-	if err != nil {
-		return nil, err
-	}
-
-	obj, err := model.FindOne()
-	if err != nil {
-		return nil, err
-	}
-
-	mapped := rpsl.Object{
-		Attributes: []rpsl.Attribute{},
-	}
-
-	for _, attr := range obj.Attributes.Attribute {
-		mapped.Attributes = append(mapped.Attributes, rpsl.Attribute{
-			Name:  attr.Name,
-			Value: attr.Value.(string),
+func objectToModel(obj *rpsl.Object, data *ObjectModel) {
+	data.Attributes = []ObjectModelAttribute{}
+	for _, a := range obj.Attributes {
+		data.Attributes = append(data.Attributes, ObjectModelAttribute{
+			Name:  types.StringValue(a.Name),
+			Value: types.StringValue(a.Value),
 		})
 	}
-
-	return &mapped, nil
 }
 
-func queryData(kind string, key string, data *ObjectModel) error {
-	obj, err := query(kind, key)
-	if err != nil {
-		return err
+func modelToObject(data *ObjectModel) *rpsl.Object {
+	obj := rpsl.Object{
+		Attributes: make([]rpsl.Attribute, 0),
 	}
 
-	data.Attributes = map[string][]types.String{}
-	for _, attr := range obj.Attributes {
-		if data.Attributes[attr.Name] == nil {
-			data.Attributes[attr.Name] = []types.String{}
-		}
-
-		data.Attributes[attr.Name] = append(data.Attributes[attr.Name], types.StringValue(attr.Value))
-		data.RawAttributes = append(data.RawAttributes, ObjectModelAttribute{
-			Name:  types.StringValue(attr.Name),
-			Value: types.StringValue(attr.Value),
+	for _, attr := range data.Attributes {
+		obj.Attributes = append(obj.Attributes, rpsl.Attribute{
+			Name:  string(attr.Name.ValueString()),
+			Value: string(attr.Value.ValueString()),
 		})
 	}
 
-	return nil
+	return &obj
+}
+
+func filterObject(obj *rpsl.Object, data *ObjectModel) {
+	skipKeys := []string{"created", "last-modified"}
+
+	data.Attributes = []ObjectModelAttribute{}
+	for i, a := range obj.Attributes {
+		if i == 0 || slices.Contains(skipKeys, a.Name) {
+			continue
+		}
+
+		data.Attributes = append(data.Attributes, ObjectModelAttribute{
+			Name:  types.StringValue(a.Name),
+			Value: types.StringValue(a.Value),
+		})
+	}
+}
+
+func filterModel(data *ObjectModel) *rpsl.Object {
+	skipKeys := []string{"created", "last-modified"}
+	obj := rpsl.Object{
+		Attributes: make([]rpsl.Attribute, 0),
+	}
+
+	for _, attr := range data.Attributes {
+		if slices.Contains(skipKeys, attr.Name.ValueString()) {
+			continue
+		}
+
+		obj.Attributes = append(obj.Attributes, rpsl.Attribute{
+			Name:  string(attr.Name.ValueString()),
+			Value: string(attr.Value.ValueString()),
+		})
+	}
+
+	return &obj
 }

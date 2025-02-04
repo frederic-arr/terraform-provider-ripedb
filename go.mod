@@ -3,8 +3,8 @@ module terraform-provider-ripedb
 go 1.22.5
 
 require (
-	github.com/frederic-arr/ripedb-go v0.0.0-20240928220830-32693cea92e8
-	github.com/frederic-arr/rpsl-go v0.0.0-20240831154502-46a71b831def
+	github.com/frederic-arr/ripedb-go v0.4.1
+	github.com/frederic-arr/rpsl-go v0.3.1
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
 	github.com/hashicorp/terraform-plugin-framework v1.12.0
 	github.com/hashicorp/terraform-plugin-go v0.24.0

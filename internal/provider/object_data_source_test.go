@@ -18,14 +18,13 @@ func TestAccObjectDataSource(t *testing.T) {
 				Config: `
 				data "ripedb_object" "test" {
 					class = "aut-num"
-					key = "AS3333"
+					value = "AS3333"
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ripedb_object.test", "id", "aut-num:AS3333"),
-					resource.TestCheckResourceAttr("data.ripedb_object.test", "attributes.aut-num.0", "AS3333"),
-					resource.TestCheckResourceAttr("data.ripedb_object.test", "raw_attributes.0.name", "aut-num"),
-					resource.TestCheckResourceAttr("data.ripedb_object.test", "raw_attributes.0.value", "AS3333"),
+					resource.TestCheckResourceAttr("data.ripedb_object.test", "attributes.0.name", "aut-num"),
+					resource.TestCheckResourceAttr("data.ripedb_object.test", "attributes.0.value", "AS3333"),
 				),
 			},
 		},

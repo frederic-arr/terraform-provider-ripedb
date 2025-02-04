@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/frederic-arr/ripedb-go/ripedb"
+	"github.com/frederic-arr/ripedb-go/ripedb/models"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,7 +20,9 @@ func NewObjectDataSource() datasource.DataSource {
 	return &ObjectDataSource{}
 }
 
-type ObjectDataSource struct{}
+type ObjectDataSource struct {
+	client *ripedb.RipeDbClient
+}
 
 func (d *ObjectDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_object"
@@ -26,7 +30,7 @@ func (d *ObjectDataSource) Metadata(ctx context.Context, req datasource.Metadata
 
 func (d *ObjectDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This data source provides information about an Autonomous System Number (ASN) object in the RIPE Database.",
+		MarkdownDescription: "This data source provides information a generic object in the RIPE Database.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "the ID of the object",
@@ -36,18 +40,11 @@ func (d *ObjectDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 				MarkdownDescription: "the class of the object",
 				Required:            true,
 			},
-			"key": schema.StringAttribute{
+			"value": schema.StringAttribute{
 				MarkdownDescription: "the key of the object",
 				Required:            true,
 			},
-			"attributes": schema.MapAttribute{
-				MarkdownDescription: "a map of attributes with their values",
-				Computed:            true,
-				ElementType: types.ListType{
-					ElemType: types.StringType,
-				},
-			},
-			"raw_attributes": schema.ListNestedAttribute{
+			"attributes": schema.ListNestedAttribute{
 				MarkdownDescription: "the attributes of the object",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
@@ -72,6 +69,18 @@ func (d *ObjectDataSource) Configure(ctx context.Context, req datasource.Configu
 	if req.ProviderData == nil {
 		return
 	}
+
+	data, ok := req.ProviderData.(*RipeDbProviderData)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *RipeDbProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.client = data.Client
 }
 
 func (d *ObjectDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -82,12 +91,16 @@ func (d *ObjectDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	err := queryData(data.Class.ValueString(), data.Key.ValueString(), &data)
+	resource := data.Class.ValueString()
+	key := data.Value.ValueString()
+	obj, err := (*d.client).GetObject(resource, key)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to query RIPE Database", err.Error())
+		resp.Diagnostics.AddError("failed to query RIPE database", err.Error())
 		return
 	}
 
-	data.Id = types.StringValue(fmt.Sprintf("%s:%s", data.Class.ValueString(), data.Key.ValueString()))
+	m := models.ObjectToModelUnchecked(resource, *obj)
+	objectToModel(obj, &data)
+	data.Id = types.StringValue(fmt.Sprintf("%s:%s", resource, m.Key()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -27,8 +27,9 @@ func (r GetFirstFunction) Metadata(_ context.Context, req function.MetadataReque
 
 func (r GetFirstFunction) Definition(_ context.Context, _ function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
-		Summary:             "Get the first value of an attribute",
-		MarkdownDescription: "This function returns the first value of an attribute.",
+		Summary: "Get the first value of an attribute",
+		MarkdownDescription: "This function returns the first value of an attribute. \n" +
+			"If the attribute does not exist, returns `null`.",
 		Parameters: []function.Parameter{
 			function.ListParameter{
 				Name:                "attributes",

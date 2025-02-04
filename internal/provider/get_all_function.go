@@ -27,8 +27,9 @@ func (r GetAllFunction) Metadata(_ context.Context, req function.MetadataRequest
 
 func (r GetAllFunction) Definition(_ context.Context, _ function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
-		Summary:             "Get all values of an attribute",
-		MarkdownDescription: "This function returns all the values of an attribute.",
+		Summary: "Get all values of an attribute",
+		MarkdownDescription: "This function returns all the values of an attribute. \n" +
+			"If the attribute does not exist, returns `[]` (*an empty list*).",
 		Parameters: []function.Parameter{
 			function.ListParameter{
 				Name:                "attributes",
@@ -60,7 +61,7 @@ func (r GetAllFunction) Run(ctx context.Context, req function.RunRequest, resp *
 		return
 	}
 
-	var values []types.String
+	var values []types.String = make([]types.String, 0)
 	for _, attr := range attributes {
 		if attr.Name == key {
 			if attr.Value.ValueString() == "" {
