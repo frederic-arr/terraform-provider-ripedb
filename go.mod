@@ -1,6 +1,6 @@
 module terraform-provider-ripedb
 
-go 1.22.5
+go 1.22.7
 
 require (
 	github.com/frederic-arr/ripedb-go v0.4.1
