@@ -3,12 +3,12 @@
 page_title: "ripedb_object Resource - ripedb"
 subcategory: ""
 description: |-
-  This data source provides information about an Autonomous System Number (ASN) object in the RIPE Database.
+  Manage a generic object in the RIPE Database.
 ---
 
 # ripedb_object (Resource)
 
-This data source provides information about an Autonomous System Number (ASN) object in the RIPE Database.
+Manage a generic object in the RIPE Database.
 
 
 
@@ -18,10 +18,12 @@ This data source provides information about an Autonomous System Number (ASN) ob
 ### Required
 
 - `attributes` (Attributes List) the attributes of the object. The first attribute will be used as the object class and key (see [below for nested schema](#nestedatt--attributes))
+- `class` (String) the class of the object
+- `value` (String) the value of the class
 
 ### Read-Only
 
-- `id` (String) the lookup key for the object (e.g. `aut-num:AS3333`, `domain:example.com`)
+- `id` (String) the ID of the object
 
 <a id="nestedatt--attributes"></a>
 ### Nested Schema for `attributes`

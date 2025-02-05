@@ -8,7 +8,8 @@ description: |-
 
 # function: get_first
 
-This function returns the first value of an attribute.
+This function returns the first value of an attribute. 
+If the attribute does not exist, returns `null`.
 
 ## Example Usage
 

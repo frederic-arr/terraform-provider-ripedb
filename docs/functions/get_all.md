@@ -8,7 +8,8 @@ description: |-
 
 # function: get_all
 
-This function returns all the values of an attribute.
+This function returns all the values of an attribute. 
+If the attribute does not exist, returns `[]` (*an empty list*).
 
 ## Example Usage
 

@@ -3,12 +3,12 @@
 page_title: "ripedb_object Data Source - ripedb"
 subcategory: ""
 description: |-
-  This data source provides information about an Autonomous System Number (ASN) object in the RIPE Database.
+  This data source provides information a generic object in the RIPE Database.
 ---
 
 # ripedb_object (Data Source)
 
-This data source provides information about an Autonomous System Number (ASN) object in the RIPE Database.
+This data source provides information a generic object in the RIPE Database.
 
 ## Example Usage
 
@@ -25,7 +25,7 @@ data "ripedb_object" "test" {
 ### Required
 
 - `class` (String) the class of the object
-- `key` (String) the key of the object
+- `value` (String) the key of the object
 
 ### Read-Only
 
