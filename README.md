@@ -35,7 +35,7 @@ If you want to use the development version of the provider, you can configure th
 ```hcl
 provider_installation {
     dev_overrides {
-        "frederic-arr/ripe" = "/home/user/go/bin"
+        "frederic-arr/ripedb" = "/home/user/go/bin"
     }
 
     direct {}
