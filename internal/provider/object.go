@@ -62,22 +62,3 @@ func filterObject(obj *rpsl.Object, data *ObjectModel) {
 		})
 	}
 }
-
-func filterModel(data *ObjectModel) *rpsl.Object {
-	obj := rpsl.Object{
-		Attributes: make([]rpsl.Attribute, 0),
-	}
-
-	for _, attr := range data.Attributes {
-		if slices.Contains(OMIT_KEYS, attr.Name.ValueString()) {
-			continue
-		}
-
-		obj.Attributes = append(obj.Attributes, rpsl.Attribute{
-			Name:  attr.Name.ValueString(),
-			Value: attr.Value.ValueString(),
-		})
-	}
-
-	return &obj
-}
