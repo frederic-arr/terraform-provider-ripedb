@@ -26,7 +26,7 @@ func NewObjectResource() resource.Resource {
 }
 
 type ObjectResource struct {
-	client *ripedb.RipeDbClient
+	client *ripedb.RipeClient
 }
 
 func (r *ObjectResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

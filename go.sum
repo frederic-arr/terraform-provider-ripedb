@@ -24,8 +24,8 @@ github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FM
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
 github.com/fatih/color v1.17.0 h1:GlRw1BRJxkpqUCBKzKOw098ed57fEsKeNjpTe3cSjK4=
 github.com/fatih/color v1.17.0/go.mod h1:YZ7TlrGPkiz6ku9fK3TLD/pl3CpsiFyu8N92HLgmosI=
-github.com/frederic-arr/ripedb-go v0.5.0 h1:qxTpATsnOR9JCmh/I8EjXIcfx6jLI9OYpr+9pfd1nOU=
-github.com/frederic-arr/ripedb-go v0.5.0/go.mod h1:akIoMzkMSBVVXoKR0FziFQMSLuj86bTVGlyP35LZByc=
+github.com/frederic-arr/ripedb-go v0.6.0 h1:qvXViqtD8RF8Rp0DecZi/l0KcJ9bMdV+GdjP6cU4oZs=
+github.com/frederic-arr/ripedb-go v0.6.0/go.mod h1:akIoMzkMSBVVXoKR0FziFQMSLuj86bTVGlyP35LZByc=
 github.com/frederic-arr/rpsl-go v0.3.1 h1:tS5sBF63NoKX6BuLDnhoMVIp1R/xnT0Ma0XY4MicaFQ=
 github.com/frederic-arr/rpsl-go v0.3.1/go.mod h1:CtPQg+MhImDmC0m3YP5PtZQFQTDQRX2yo2172ZTiYNY=
 github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 h1:+zs/tPmkDkHx3U66DAb0lQFJrpS6731Oaa12ikc+DiI=

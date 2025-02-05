@@ -48,7 +48,7 @@ type RipeDbProviderModel struct {
 }
 
 type RipeDbProviderData struct {
-	Client *ripedb.RipeDbClient
+	Client *ripedb.RipeClient
 }
 
 func (p *RipeDbProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -61,30 +61,31 @@ func (p *RipeDbProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 		MarkdownDescription: "RIPE DB.",
 		Attributes: map[string]schema.Attribute{
 			"endpoint": schema.StringAttribute{
-				MarkdownDescription: "the endpoint of the RIPE DB",
+				MarkdownDescription: "The endpoint of the RIPE Database RESTful API.",
 				Optional:            true,
 			},
 			"database": schema.StringAttribute{
-				MarkdownDescription: "the source of the RIPE DB",
+				MarkdownDescription: "The database where the queries should be made. This is equivalent to the `source` field of the objects.",
 				Optional:            true,
 			},
+
 			"user": schema.StringAttribute{
-				MarkdownDescription: "the name of the MNTNER object",
+				MarkdownDescription: "Username for the basic authentication protocol. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
 				Optional:            true,
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "the password of the MNTNER object",
+				MarkdownDescription: "Password for the basic authentication protocol. If no `user` is provided, the authentication will be made through the `password` query parameter instead of the `Authorizatio` header. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 
 			"certificate": schema.StringAttribute{
-				MarkdownDescription: "the certificate of the MNTNER object",
+				MarkdownDescription: "PEM-encoded client certificate for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"key": schema.StringAttribute{
-				MarkdownDescription: "the private key of the MNTNER object",
+				MarkdownDescription: "PEM-encoded client certificate key for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
 				Optional:            true,
 				Sensitive:           true,
 			},
@@ -99,38 +100,30 @@ func (p *RipeDbProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	var endpoint string
-	if data.Endpoint.ValueString() != "" {
-		endpoint = data.Endpoint.ValueString()
-	} else {
-		endpoint = DefaultEndpoint
+	opts := ripedb.RipeClientOptions{
+		Endpoint: data.Endpoint.ValueStringPointer(),
+		Source:   data.Source.ValueStringPointer(),
+		User:     data.User.ValueStringPointer(),
+		Password: data.Password.ValueStringPointer(),
 	}
 
-	var source string
-	if data.Source.ValueString() != "" {
-		source = data.Source.ValueString()
-	} else {
-		source = DefaultSource
+	if !data.Certificate.IsNull() {
+		cert := []byte(data.Certificate.ValueString())
+		opts.Certificate = &cert
+	}
+	if !data.Key.IsNull() {
+		key := []byte(data.Key.ValueString())
+		opts.Key = &key
 	}
 
-	var client ripedb.RipeDbClient
-	if !data.Password.IsNull() {
-		client = ripedb.NewRipePasswordClient(data.User.ValueStringPointer(), data.Password.ValueString(), nil)
-	} else if !data.Certificate.IsNull() || !data.Key.IsNull() {
-		if data.Certificate.IsNull() || data.Key.IsNull() {
-			resp.Diagnostics.AddError("both key and cert must be provided", "")
-		}
-
-		client = ripedb.NewRipeX509Client([]byte(data.Certificate.ValueString()), []byte(data.Key.ValueString()), nil)
-	} else {
-		client = ripedb.NewRipeAnonymousClient(nil)
+	client, err := ripedb.NewRipeClient(&opts)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to create RIPE HTTP client", err.Error())
+		return
 	}
-
-	client.SetEndpoint(endpoint)
-	client.SetSource(source)
 
 	providerData := RipeDbProviderData{
-		Client: &client,
+		Client: client,
 	}
 	resp.DataSourceData = &providerData
 	resp.ResourceData = &providerData
