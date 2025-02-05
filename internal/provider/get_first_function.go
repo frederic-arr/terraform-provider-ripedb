@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright (c) The RIPE DB Provider for Terraform Authors
 // SPDX-License-Identifier: MPL-2.0
 
 package provider
