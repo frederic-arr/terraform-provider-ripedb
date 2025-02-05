@@ -1,6 +1,6 @@
 data "ripedb_object" "test" {
   class = "organisation"
-  key   = "ORG-TT1-TEST"
+  value = "ORG-TT1-TEST"
 }
 
 output "mnt_by" {

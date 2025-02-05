@@ -15,7 +15,7 @@ This data source provides information a generic object in the RIPE Database.
 ```terraform
 data "ripedb_object" "test" {
   class = "organisation"
-  key   = "ORG-TT1-TEST"
+  value = "ORG-TT1-TEST"
 }
 ```
 
