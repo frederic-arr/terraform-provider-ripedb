@@ -4,7 +4,7 @@ go 1.22.7
 
 require (
 	github.com/frederic-arr/ripedb-go v0.6.0
-	github.com/frederic-arr/rpsl-go v0.3.1
+	github.com/frederic-arr/rpsl-go v0.3.2
 	github.com/hashicorp/terraform-plugin-framework v1.12.0
 	github.com/hashicorp/terraform-plugin-go v0.24.0
 )
