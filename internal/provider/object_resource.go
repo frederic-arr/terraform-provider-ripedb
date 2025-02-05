@@ -106,7 +106,9 @@ func (r *ObjectResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// The first attribute should always be the class of the object
 	// Since the class is given in a separate field, we have to prepend it
+	// We also always add the source as it is already specified in the provider
 	obj.Attributes = append([]rpsl.Attribute{{Name: resource, Value: data.Value.ValueString()}}, obj.Attributes...)
+	obj.Attributes = append(obj.Attributes, rpsl.Attribute{Name: "source", Value: (*r.client).GetSource()})
 
 	m, err := models.ObjectToModel(resource, *obj)
 	if err != nil {
@@ -161,7 +163,9 @@ func (r *ObjectResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// The first attribute should always be the class of the object
 	// Since the class is given in a separate field, we have to prepend it
+	// We also always add the source as it is already specified in the provider
 	obj.Attributes = append([]rpsl.Attribute{{Name: resource, Value: data.Value.ValueString()}}, obj.Attributes...)
+	obj.Attributes = append(obj.Attributes, rpsl.Attribute{Name: "source", Value: (*r.client).GetSource()})
 
 	m, err := models.ObjectToModel(resource, *obj)
 	if err != nil {
