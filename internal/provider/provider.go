@@ -58,7 +58,7 @@ func (p *RipeDbProvider) Metadata(ctx context.Context, req provider.MetadataRequ
 
 func (p *RipeDbProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "RIPE DB.",
+		MarkdownDescription: "The RIPE DB provider is used to interact with the objects in the RIPE database. The provider needs to be configured with the proper credentials before objects can be modified.",
 		Attributes: map[string]schema.Attribute{
 			"endpoint": schema.StringAttribute{
 				MarkdownDescription: "The endpoint of the RIPE Database RESTful API.",

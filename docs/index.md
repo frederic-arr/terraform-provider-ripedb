@@ -2,12 +2,12 @@
 page_title: "Provider: RIPE DB"
 subcategory: ""
 description: |-
-    The RIPE DB provider is used to interact with the objects in the RIPE database. The provider needs to be configured with the proper credentials before objects can be modified.
+  The RIPE DB provider is used to interact with the objects in the RIPE database. The provider needs to be configured with the proper credentials before objects can be modified.
 ---
 
 # RIPE DB Provider
 
-RIPE DB.
+The RIPE DB provider is used to interact with the objects in the RIPE database. The provider needs to be configured with the proper credentials before objects can be modified.
 
 ## Example Usage
 
