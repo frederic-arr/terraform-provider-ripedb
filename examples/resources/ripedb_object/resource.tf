@@ -1,4 +1,4 @@
-resource "ripedb_object" "person" {
+resource "ripedb_object" "john" {
   class = "person"
   value = "John Smith"
   attributes = [

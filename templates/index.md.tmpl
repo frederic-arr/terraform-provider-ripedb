@@ -1,0 +1,49 @@
+---
+page_title: "Provider: RIPE DB"
+subcategory: ""
+description: |-
+    The RIPE DB provider is used to interact with the objects in the RIPE database. The provider needs to be configured with the proper credentials before objects can be modified.
+---
+
+# RIPE DB Provider
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile (printf "examples/provider/provider.tf")}}
+
+## Authentication
+
+The RIPE DB provider supports three authentication protocols:
+
+- Anonymous authentication
+- Basic authentication (Username/Password/API Key)
+- X.509 Client Certificate authentication
+
+### Anonymous Authentication
+
+{{ tffile (printf "examples/provider/auth_anonymous.tf")}}
+
+### Basic Authentication
+
+Basic authentication allows you to edit the objects maintained by the authenticated maintainer.
+
+You can either configure an MD5 password on the maintainer and then specify the maintainer name (ending with `-MNT` as the maintainer) as the user use the configured password.
+
+> **CAUTION**: It is possible to provider the password without the username, but it is not recommended.
+> This will pass the password as a query parameter in the URL (instead of the `Authorization` header).
+
+It is also possible to use an API key, please refer to [RIPE's documentation - Appendix K - API Keys](https://docs.db.ripe.net/23.Appendices/11-Appendix-K--API-Keys.html)
+
+{{ tffile (printf "examples/provider/auth_basic.tf")}}
+
+### X.509 Client Certificate Authentication
+
+X.509 client certificate authentication provides the same capabilites as the Basic authentication, the only difference is the authentication protocol.
+
+To configure `X.509` authentication generate a client certificate as per [Appendix I - Client Certificate Authentication](https://docs.db.ripe.net/Appendices/Appendix-I--Client-Certificate-Authentication/) and add the certificate to the maintainer's authentication methods.
+
+{{ tffile (printf "examples/provider/auth_x509.tf")}}
+
+{{ .SchemaMarkdown | trimspace }}
