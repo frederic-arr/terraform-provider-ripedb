@@ -39,8 +39,8 @@ func modelToObject(data *ObjectModel) *rpsl.Object {
 
 	for _, attr := range data.Attributes {
 		obj.Attributes = append(obj.Attributes, rpsl.Attribute{
-			Name:  string(attr.Name.ValueString()),
-			Value: string(attr.Value.ValueString()),
+			Name:  attr.Name.ValueString(),
+			Value: attr.Value.ValueString(),
 		})
 	}
 
@@ -75,8 +75,8 @@ func filterModel(data *ObjectModel) *rpsl.Object {
 		}
 
 		obj.Attributes = append(obj.Attributes, rpsl.Attribute{
-			Name:  string(attr.Name.ValueString()),
-			Value: string(attr.Value.ValueString()),
+			Name:  attr.Name.ValueString(),
+			Value: attr.Value.ValueString(),
 		})
 	}
 
