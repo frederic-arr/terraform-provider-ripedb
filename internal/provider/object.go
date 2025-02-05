@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+var OMIT_KEYS = []string{"source", "created", "last-modified"}
+
 type ObjectModel struct {
 	Id         types.String           `tfsdk:"id"`
 	Class      types.String           `tfsdk:"class"`
@@ -48,11 +50,9 @@ func modelToObject(data *ObjectModel) *rpsl.Object {
 }
 
 func filterObject(obj *rpsl.Object, data *ObjectModel) {
-	skipKeys := []string{"created", "last-modified"}
-
 	data.Attributes = []ObjectModelAttribute{}
 	for i, a := range obj.Attributes {
-		if i == 0 || slices.Contains(skipKeys, a.Name) {
+		if i == 0 || slices.Contains(OMIT_KEYS, a.Name) {
 			continue
 		}
 
@@ -64,13 +64,12 @@ func filterObject(obj *rpsl.Object, data *ObjectModel) {
 }
 
 func filterModel(data *ObjectModel) *rpsl.Object {
-	skipKeys := []string{"created", "last-modified"}
 	obj := rpsl.Object{
 		Attributes: make([]rpsl.Attribute, 0),
 	}
 
 	for _, attr := range data.Attributes {
-		if slices.Contains(skipKeys, attr.Name.ValueString()) {
+		if slices.Contains(OMIT_KEYS, attr.Name.ValueString()) {
 			continue
 		}
 
