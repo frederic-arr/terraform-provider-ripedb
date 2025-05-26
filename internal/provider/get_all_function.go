@@ -61,7 +61,7 @@ func (r GetAllFunction) Run(ctx context.Context, req function.RunRequest, resp *
 		return
 	}
 
-	var values []types.String = make([]types.String, 0)
+	values := make([]types.String, 0)
 	for _, attr := range attributes {
 		if attr.Name == key {
 			if attr.Value.ValueString() == "" {
