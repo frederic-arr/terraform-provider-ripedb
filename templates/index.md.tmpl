@@ -25,25 +25,33 @@ The RIPE DB provider supports three authentication protocols:
 
 {{ tffile (printf "examples/provider/auth_anonymous.tf")}}
 
-### Basic Authentication
+### API Key Authentication
 
-Basic authentication allows you to edit the objects maintained by the authenticated maintainer.
+API key authentication allows you to edit the objects maintained by the authenticated maintainer.
 
-You can either configure an MD5 password on the maintainer and then specify the maintainer name (ending with `-MNT` as the maintainer) as the user use the configured password.
+To configure `API Key` authentication generate an API key as per [Appendix K - API Keys](https://docs.db.ripe.net/Appendices/Appendix-K--API-Keys).
 
-> **CAUTION**: It is possible to provider the password without the username, but it is not recommended.
-> This will pass the password as a query parameter in the URL (instead of the `Authorization` header).
-
-It is also possible to use an API key, please refer to [RIPE's documentation - Appendix K - API Keys](https://docs.db.ripe.net/23.Appendices/11-Appendix-K--API-Keys.html)
-
-{{ tffile (printf "examples/provider/auth_basic.tf")}}
+{{ tffile (printf "examples/provider/auth_api.tf")}}
 
 ### X.509 Client Certificate Authentication
 
-X.509 client certificate authentication provides the same capabilites as the Basic authentication, the only difference is the authentication protocol.
+X.509 client certificate authentication provides the same capabilites as the API key authentication, the only difference is the authentication protocol.
 
 To configure `X.509` authentication generate a client certificate as per [Appendix I - Client Certificate Authentication](https://docs.db.ripe.net/Appendices/Appendix-I--Client-Certificate-Authentication/) and add the certificate to the maintainer's authentication methods.
 
 {{ tffile (printf "examples/provider/auth_x509.tf")}}
+
+### Username/Password Authentication
+
+> **DEPRECIATION NOTICE**: RIPE NCC is deprecating MD5 hashed passwords by the end of 2025.
+
+Username/Password authentication provides the same capabilites as the API key authentication, the only difference is the authentication protocol.
+
+You can configure an MD5 password on the maintainer and then specify the maintainer name (ending with `-MNT` as the maintainer) as the user use the configured password.
+
+> **CAUTION**: It is possible to provider the password without the username, but it is not recommended.
+> This will pass the password as a query parameter in the URL (instead of the `Authorization` header).
+
+{{ tffile (printf "examples/provider/auth_basic.tf")}}
 
 {{ .SchemaMarkdown | trimspace }}

@@ -43,6 +43,8 @@ type RipeDbProviderModel struct {
 	User     types.String `tfsdk:"user"`
 	Password types.String `tfsdk:"password"`
 
+	ApiKey types.String `tfsdk:"api_key"`
+
 	Certificate types.String `tfsdk:"certificate"`
 	Key         types.String `tfsdk:"key"`
 }
@@ -70,22 +72,30 @@ func (p *RipeDbProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 			},
 
 			"user": schema.StringAttribute{
-				MarkdownDescription: "Username for the basic authentication protocol. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
+				MarkdownDescription: "Username for the basic authentication protocol. You cannot use Password Authentication along with any other authentication protocol.",
 				Optional:            true,
+				DeprecationMessage:  "RIPE NCC is deprecating MD5 hashed passwords by the end of 2025.",
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "Password for the basic authentication protocol. If no `user` is provided, the authentication will be made through the `password` query parameter instead of the `Authorizatio` header. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
+				MarkdownDescription: "Password for the basic authentication protocol. If no `user` is provided, the authentication will be made through the `password` query parameter instead of the `Authorizatio` header. You cannot use Password Authentication along with any other authentication protocol.",
+				Optional:            true,
+				Sensitive:           true,
+				DeprecationMessage:  "RIPE NCC is deprecating MD5 hashed passwords by the end of 2025.",
+			},
+
+			"api_key": schema.StringAttribute{
+				MarkdownDescription: "API key for the basic authentication protocol. You cannot use API key Authentication along with any other authentication protocol.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 
 			"certificate": schema.StringAttribute{
-				MarkdownDescription: "PEM-encoded client certificate for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
+				MarkdownDescription: "PEM-encoded client certificate for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Authentication along with any other authentication protocol.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"key": schema.StringAttribute{
-				MarkdownDescription: "PEM-encoded client certificate key for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Client Authentication and Basic authentication at the same time.",
+				MarkdownDescription: "PEM-encoded client certificate key for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Authentication along with any other authentication protocol.",
 				Optional:            true,
 				Sensitive:           true,
 			},
@@ -100,11 +110,15 @@ func (p *RipeDbProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
+	userAgent := "terraform-provider-ripedb (https://github.com/frederic-arr/terraform-provider-ripedb)"
+
 	opts := ripedb.RipeClientOptions{
-		Endpoint: data.Endpoint.ValueStringPointer(),
-		Source:   data.Source.ValueStringPointer(),
-		User:     data.User.ValueStringPointer(),
-		Password: data.Password.ValueStringPointer(),
+		Endpoint:  data.Endpoint.ValueStringPointer(),
+		Source:    data.Source.ValueStringPointer(),
+		User:      data.User.ValueStringPointer(),
+		Password:  data.Password.ValueStringPointer(),
+		ApiKey:    data.ApiKey.ValueStringPointer(),
+		UserAgent: &userAgent,
 	}
 
 	if !data.Certificate.IsNull() {
