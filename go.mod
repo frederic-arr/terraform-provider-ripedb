@@ -7,7 +7,7 @@ toolchain go1.24.6
 require (
 	github.com/frederic-arr/ripedb-go v0.7.0
 	github.com/frederic-arr/rpsl-go v0.3.2
-	github.com/hashicorp/terraform-plugin-framework v1.15.1
+	github.com/hashicorp/terraform-plugin-framework v1.16.1
 	github.com/hashicorp/terraform-plugin-go v0.29.0
 )
 
