@@ -85,7 +85,11 @@ provider "ripe" {
 - `api_key` (String, Sensitive) API key for the basic authentication protocol. You cannot use API key Authentication along with any other authentication protocol.
 - `certificate` (String, Sensitive) PEM-encoded client certificate for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Authentication along with any other authentication protocol.
 - `database` (String) The database where the queries should be made. This is equivalent to the `source` field of the objects.
+- `dry_run` (Boolean) Validates all logic, auth, etc against RIPEDB, but does not update the objects.
 - `endpoint` (String) The endpoint of the RIPE Database RESTful API.
+- `exit_on_info` (Boolean) Exits with an error on info messages.
+- `exit_on_unknown` (Boolean) Exits with an error on unknown severity messages.
+- `exit_on_warning` (Boolean) Exits with an error on warning messages.
+- `ignore_unknown_keys` (Boolean) Skip unknown keys in validation.
 - `key` (String, Sensitive) PEM-encoded client certificate key for TLS authentication. Both `certificate` and `key` must be provided. The `endpoint` field must be set appropriately if you are not using the default production API. You cannot use X.509 Authentication along with any other authentication protocol.
-- `password` (String, Sensitive, Deprecated) Password for the basic authentication protocol. If no `user` is provided, the authentication will be made through the `password` query parameter instead of the `Authorizatio` header. You cannot use Password Authentication along with any other authentication protocol.
-- `user` (String, Deprecated) Username for the basic authentication protocol. You cannot use Password Authentication along with any other authentication protocol.
+- `skip_validation` (Boolean) Skip all local validation.

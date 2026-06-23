@@ -33,6 +33,12 @@ resource "ripedb_object" "john" {
 - `class` (String) the class of the object
 - `value` (String) the value of the class
 
+### Optional
+
+- `ignore_unknown_keys` (Boolean) Skip unknown keys in validation. Is OR'ed with the provider-level setting.
+- `skip_keys` (List of String) List of keys to opt-out of validation.
+- `skip_validation` (Boolean) Skip all local validation. Is OR'ed with the provider-level setting.
+
 ### Read-Only
 
 - `id` (String) the ID of the object
