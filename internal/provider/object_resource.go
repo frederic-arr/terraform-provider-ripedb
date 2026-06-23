@@ -25,6 +25,14 @@ func NewObjectResource() resource.Resource {
 	return &ObjectResource{}
 }
 
+type ObjectResourceModel struct {
+	ObjectModel
+
+	SkipValidation    types.Bool `tfsdk:"skip_validation"`
+	IgnoreUnknownKeys types.Bool `tfsdk:"ignore_unknown_keys"`
+	SkipKeys          types.List `tfsdk:"skip_keys"`
+}
+
 type ObjectResource struct {
 	client *ripedb.RipeClient
 }
@@ -71,6 +79,19 @@ func (r *ObjectResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
+			"skip_validation": schema.BoolAttribute{
+				MarkdownDescription: "Skip all local validation. Is OR'ed with the provider-level setting.",
+				Optional:            true,
+			},
+			"ignore_unknown_keys": schema.BoolAttribute{
+				MarkdownDescription: "Skip unknown keys in validation. Is OR'ed with the provider-level setting.",
+				Optional:            true,
+			},
+			"skip_keys": schema.ListAttribute{
+				ElementType:         types.StringType,
+				MarkdownDescription: "List of keys to opt-out of validation.",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -95,14 +116,14 @@ func (r *ObjectResource) Configure(ctx context.Context, req resource.ConfigureRe
 }
 
 func (r *ObjectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data ObjectModel
+	var data ObjectResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	resource := data.Class.ValueString()
-	obj := modelToObject(&data)
+	obj := modelToObject(&data.ObjectModel)
 
 	// The first attribute should always be the class of the object
 	// Since the class is given in a separate field, we have to prepend it
@@ -110,13 +131,28 @@ func (r *ObjectResource) Create(ctx context.Context, req resource.CreateRequest,
 	obj.Attributes = append([]rpsl.Attribute{{Name: resource, Value: data.Value.ValueString()}}, obj.Attributes...)
 	obj.Attributes = append(obj.Attributes, rpsl.Attribute{Name: "source", Value: (*r.client).GetSource()})
 
-	m, err := models.ObjectToModel(resource, *obj)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("failed to validate object with %s schema", resource), err.Error())
-		return
+	skipValidation := r.client.GetSkipValidation() || data.SkipValidation.ValueBool()
+	skipUnknownKeys := r.client.GetSkipUnknownKeys() || data.IgnoreUnknownKeys.ValueBool()
+	var skipKeys []string
+	if !data.SkipKeys.IsNull() && !data.SkipKeys.IsUnknown() {
+		diags := data.SkipKeys.ElementsAs(ctx, &skipKeys, false)
+		resp.Diagnostics.Append(diags...)
 	}
 
-	obj, err = (*r.client).CreateObject(resource, obj)
+	var m models.Model
+	var err error
+
+	if skipValidation {
+		m = models.ObjectToModelUnchecked(resource, *obj)
+	} else {
+		m, err = models.ObjectToModelWithOptions(resource, *obj, skipUnknownKeys, skipKeys)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("failed to validate object with %s schema", resource), err.Error())
+			return
+		}
+	}
+
+	obj, err = (*r.client).CreateObjectWithOptions(resource, obj, skipValidation, skipUnknownKeys, skipKeys)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create object in RIPE database", err.Error())
 		return
@@ -124,13 +160,13 @@ func (r *ObjectResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Remove the first field and timestamps
 	// first field: we already specify its data in the .class and .value fields
-	filterObject(obj, &data)
+	filterObject(obj, &data.ObjectModel)
 	data.Id = types.StringValue(fmt.Sprintf("%s:%s", resource, m.Key()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ObjectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data ObjectModel
+	var data ObjectResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,14 +180,14 @@ func (r *ObjectResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	filterObject(obj, &data)
+	filterObject(obj, &data.ObjectModel)
 	data.Class = types.StringValue(idParts[0])
 	data.Value = types.StringValue(obj.Attributes[0].Value)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ObjectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ObjectModel
+	var data ObjectResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -159,7 +195,7 @@ func (r *ObjectResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	resource := data.Class.ValueString()
-	obj := modelToObject(&data)
+	obj := modelToObject(&data.ObjectModel)
 
 	// The first attribute should always be the class of the object
 	// Since the class is given in a separate field, we have to prepend it
@@ -167,13 +203,28 @@ func (r *ObjectResource) Update(ctx context.Context, req resource.UpdateRequest,
 	obj.Attributes = append([]rpsl.Attribute{{Name: resource, Value: data.Value.ValueString()}}, obj.Attributes...)
 	obj.Attributes = append(obj.Attributes, rpsl.Attribute{Name: "source", Value: (*r.client).GetSource()})
 
-	m, err := models.ObjectToModel(resource, *obj)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("failed to validate object with %s schema", resource), err.Error())
-		return
+	skipValidation := r.client.GetSkipValidation() || data.SkipValidation.ValueBool()
+	skipUnknownKeys := r.client.GetSkipUnknownKeys() || data.IgnoreUnknownKeys.ValueBool()
+	var skipKeys []string
+	if !data.SkipKeys.IsNull() && !data.SkipKeys.IsUnknown() {
+		diags := data.SkipKeys.ElementsAs(ctx, &skipKeys, false)
+		resp.Diagnostics.Append(diags...)
 	}
 
-	obj, err = (*r.client).UpdateObject(resource, m.Key(), obj)
+	var m models.Model
+	var err error
+
+	if skipValidation {
+		m = models.ObjectToModelUnchecked(resource, *obj)
+	} else {
+		m, err = models.ObjectToModelWithOptions(resource, *obj, skipUnknownKeys, skipKeys)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("failed to validate object with %s schema", resource), err.Error())
+			return
+		}
+	}
+
+	obj, err = (*r.client).UpdateObjectWithOptions(resource, m.Key(), obj, skipValidation, skipUnknownKeys, skipKeys)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update RIPE database object", err.Error())
 		return
@@ -181,12 +232,12 @@ func (r *ObjectResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Remove the first field and timestamps
 	// first field: we already specify its data in the .class and .value fields
-	filterObject(obj, &data)
+	filterObject(obj, &data.ObjectModel)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ObjectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data ObjectModel
+	var data ObjectResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

@@ -19,9 +19,6 @@ import (
 var _ provider.Provider = &RipeDbProvider{}
 var _ provider.ProviderWithFunctions = &RipeDbProvider{}
 
-// TODO: Add MD5 auth
-// TODO: Add CERT auth
-
 const (
 	DefaultEndpoint = "https://rest.db.ripe.net"
 	DefaultSource   = "RIPE"
@@ -40,13 +37,18 @@ type RipeDbProviderModel struct {
 	Endpoint types.String `tfsdk:"endpoint"`
 	Source   types.String `tfsdk:"database"`
 
-	User     types.String `tfsdk:"user"`
-	Password types.String `tfsdk:"password"`
-
 	ApiKey types.String `tfsdk:"api_key"`
 
 	Certificate types.String `tfsdk:"certificate"`
 	Key         types.String `tfsdk:"key"`
+
+	ExitOnWarning types.Bool `tfsdk:"exit_on_warning"`
+	ExitOnInfo    types.Bool `tfsdk:"exit_on_info"`
+	ExitOnUnknown types.Bool `tfsdk:"exit_on_unknown"`
+	DryRun        types.Bool `tfsdk:"dry_run"`
+
+	SkipValidation    types.Bool `tfsdk:"skip_validation"`
+	IgnoreUnknownKeys types.Bool `tfsdk:"ignore_unknown_keys"`
 }
 
 type RipeDbProviderData struct {
@@ -71,18 +73,6 @@ func (p *RipeDbProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 				Optional:            true,
 			},
 
-			"user": schema.StringAttribute{
-				MarkdownDescription: "Username for the basic authentication protocol. You cannot use Password Authentication along with any other authentication protocol.",
-				Optional:            true,
-				DeprecationMessage:  "RIPE NCC is deprecating MD5 hashed passwords by the end of 2025.",
-			},
-			"password": schema.StringAttribute{
-				MarkdownDescription: "Password for the basic authentication protocol. If no `user` is provided, the authentication will be made through the `password` query parameter instead of the `Authorizatio` header. You cannot use Password Authentication along with any other authentication protocol.",
-				Optional:            true,
-				Sensitive:           true,
-				DeprecationMessage:  "RIPE NCC is deprecating MD5 hashed passwords by the end of 2025.",
-			},
-
 			"api_key": schema.StringAttribute{
 				MarkdownDescription: "API key for the basic authentication protocol. You cannot use API key Authentication along with any other authentication protocol.",
 				Optional:            true,
@@ -99,6 +89,31 @@ func (p *RipeDbProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 				Optional:            true,
 				Sensitive:           true,
 			},
+
+			"exit_on_warning": schema.BoolAttribute{
+				MarkdownDescription: "Exits with an error on warning messages.",
+				Optional:            true,
+			},
+			"exit_on_info": schema.BoolAttribute{
+				MarkdownDescription: "Exits with an error on info messages.",
+				Optional:            true,
+			},
+			"exit_on_unknown": schema.BoolAttribute{
+				MarkdownDescription: "Exits with an error on unknown severity messages.",
+				Optional:            true,
+			},
+			"dry_run": schema.BoolAttribute{
+				MarkdownDescription: "Validates all logic, auth, etc against RIPEDB, but does not update the objects.",
+				Optional:            true,
+			},
+			"skip_validation": schema.BoolAttribute{
+				MarkdownDescription: "Skip all local validation.",
+				Optional:            true,
+			},
+			"ignore_unknown_keys": schema.BoolAttribute{
+				MarkdownDescription: "Skip unknown keys in validation.",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -113,12 +128,14 @@ func (p *RipeDbProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	userAgent := "terraform-provider-ripedb (https://github.com/frederic-arr/terraform-provider-ripedb)"
 
 	opts := ripedb.RipeClientOptions{
-		Endpoint:  data.Endpoint.ValueStringPointer(),
-		Source:    data.Source.ValueStringPointer(),
-		User:      data.User.ValueStringPointer(),
-		Password:  data.Password.ValueStringPointer(),
-		ApiKey:    data.ApiKey.ValueStringPointer(),
-		UserAgent: &userAgent,
+		Endpoint:      data.Endpoint.ValueStringPointer(),
+		Source:        data.Source.ValueStringPointer(),
+		ApiKey:        data.ApiKey.ValueStringPointer(),
+		UserAgent:     &userAgent,
+		ExitOnWarning: data.ExitOnWarning.ValueBoolPointer(),
+		ExitOnInfo:    data.ExitOnInfo.ValueBoolPointer(),
+		ExitOnUnknown: data.ExitOnUnknown.ValueBoolPointer(),
+		DryRun:        data.DryRun.ValueBoolPointer(),
 	}
 
 	if !data.Certificate.IsNull() {
@@ -133,6 +150,13 @@ func (p *RipeDbProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	client, err := ripedb.NewRipeClient(&opts)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to create RIPE HTTP client", err.Error())
+		return
+	}
+
+	client.SetSkipValidation(data.SkipValidation.ValueBool())
+	client.SetSkipUnknownKeys(data.IgnoreUnknownKeys.ValueBool())
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
