@@ -103,7 +103,7 @@ func (p *RipeDbProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 				Optional:            true,
 			},
 			"dry_run": schema.BoolAttribute{
-				MarkdownDescription: "Validates all logic, auth, etc aginst RIPEDB, but does not update the objects.",
+				MarkdownDescription: "Validates all logic, auth, etc against RIPEDB, but does not update the objects.",
 				Optional:            true,
 			},
 			"skip_validation": schema.BoolAttribute{
